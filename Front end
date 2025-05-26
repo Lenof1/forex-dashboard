@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forex Dashboard</title>
+    <script src="[invalid url, do not cite]
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { text-align: center; }
+        #forexChart { max-width: 800px; margin: 20px auto; }
+        #news { list-style: none; padding: 0; }
+        #news li { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Dashboard de Análise Forex</h1>
+    <h2>Cotação EUR/USD</h2>
+    <p id="rate"></p>
+    <canvas id="forexChart"></canvas>
+    <h2>Notícias Financeiras</h2>
+    <ul id="news"></ul>
+    <button onclick="analyzeSentiment()">Analisar Sentimento da Primeira Notícia</button>
+    <p id="sentiment"></p>
+    <script>
+        // Função para buscar cotações
+        async function fetchQuote(pair) {
+            try {
+                const response = await fetch(`[invalid url, do not cite]);
+                const data = await response.json();
+                const rate = data['Realtime Currency Exchange Rate']['5. Exchange Rate'];
+                document.getElementById('rate').textContent = `Taxa ${pair}: ${rate}`;
+                // Atualizar gráfico (exemplo com dados fictícios)
+                const ctx = document.getElementById('forexChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Agora'],
+                        datasets: [{
+                            label: `Taxa ${pair}`,
+                            data: [parseFloat(rate)],
+                            borderColor: 'blue',
+                            fill: false
+                        }]
+                    },
+                    options: { scales: { y: { beginAtZero: false } } }
+                });
+            } catch (error) {
+                console.error('Erro ao buscar cotação:', error);
+            }
+        }
+
+        // Função para buscar notícias
+        async function fetchNews() {
+            try {
+                const response = await fetch('https://forex-backend.vercel.app/news');
+                const data = await response.json();
+                const newsList = document.getElementById('news');
+                data.articles.forEach(article => {
+                    const li = document.createElement('li');
+                    li.textContent = `${article.title} (${article.source.name})`;
+                    newsList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Erro ao buscar notícias:', error);
+            }
+        }
+
+        // Função para analisar sentimento
+        async function analyzeSentiment() {
+            const newsItems = document.querySelectorAll('#news li');
+            if (newsItems.length > 0) {
+                const text = newsItems[0].textContent;
+                try {
+                    const response = await fetch('https://forex-backend.vercel.app/analyze-sentiment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text })
+                    });
+                    const data = await response.json();
+                    document.getElementById('sentiment').textContent = `Sentimento: ${data[0][0].label} (${(data[0][0].score * 100).toFixed(2)}%)`;
+                } catch (error) {
+                    console.error('Erro ao analisar sentimento:', error);
+                }
+            }
+        }
+
+        // Inicializar
+        fetchQuote('EURUSD');
+        fetchNews();
+    </script>
+</body>
+</html>
